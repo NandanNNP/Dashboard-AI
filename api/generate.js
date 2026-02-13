@@ -13,8 +13,9 @@ export default async function handler(req, res) {
     }
 
     const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
+  apiKey: process.env.GROQ_API_KEY,
+  baseURL: "https://api.groq.com/openai/v1",
+});
 
     const systemPrompt = `
 You are a senior frontend engineer and dashboard designer.
@@ -45,7 +46,7 @@ ${userInstruction}
 `;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "openai/gpt-oss-120b",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
