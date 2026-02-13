@@ -1,8 +1,8 @@
-# Instant Dashboard Generator
+# Dashboard AI
 
 A web application that transforms structured JSON data into a clean, modern dashboard UI using an AI model.
 
-This project was built as part of the Onepane.ai technical assessment.
+
 
 ---
 
@@ -50,7 +50,7 @@ This project uses an **OpenAI-compatible API**.
 Currently configured to use:
 
 - **Groq API**
-- Model: `llama3-70b-8192`
+- Model: `openai/gpt-oss-120b`
 
 Groq provides an OpenAI-compatible interface, allowing usage via the official OpenAI SDK with a custom `baseURL`.
 
