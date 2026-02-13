@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 export default function Generator() {
   const [jsonInput, setJsonInput] = useState("");
@@ -11,7 +13,26 @@ export default function Generator() {
   const [generatedHtml, setGeneratedHtml] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const validateJSON = (input) => {
+    try {
+      JSON.parse(input);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const generateDashboard = async () => {
+    if (!jsonInput.trim() || !userInstruction.trim()) {
+      toast.error("Please provide both JSON data and instruction.");
+      return;
+    }
+
+    if (!validateJSON(jsonInput)) {
+      toast.error("Please provide valid JSON format.");
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -21,69 +42,95 @@ export default function Generator() {
         body: JSON.stringify({ jsonInput, userInstruction }),
       });
 
+      if (!response.ok) {
+        throw new Error("API request failed");
+      }
+
       const data = await response.json();
       setGeneratedHtml(data.html);
-    } catch (err) {
-      console.error(err);
+
+      toast.success("Dashboard generated successfully.");
+    } catch (error) {
+      toast.error("Something went wrong while generating the dashboard.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-muted p-6">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Heading section */}
 
-        {/* INPUT SECTION */}
-        <Card className="shadow-xl">
-          <CardHeader>
-            <CardTitle>Dashboard Configuration</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <div className="text-center space-y-2">
+          <h1 className="text-4xl font-bold tracking-tight">Dashboard AI</h1>
+          <p className="text-muted-foreground">
+            Instant Insights from Your Data.
+          </p>
+        </div>
 
-            <div>
-              <label className="text-sm font-medium">JSON Data</label>
-              <Textarea
-                rows={10}
-                placeholder="Paste JSON here..."
-                value={jsonInput}
-                onChange={(e) => setJsonInput(e.target.value)}
-              />
-            </div>
+        <Separator />
 
-            <div>
-              <label className="text-sm font-medium">Instruction</label>
-              <Input
-                placeholder="Describe how the dashboard should look..."
-                value={userInstruction}
-                onChange={(e) => setUserInstruction(e.target.value)}
-              />
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Input section */}
+          <Card className="shadow-xl border-0">
+            <CardHeader>
+              <CardTitle>Configuration</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">JSON Data</label>
+                <Textarea
+                  rows={12}
+                  placeholder="Paste structured JSON here..."
+                  value={jsonInput}
+                  onChange={(e) => setJsonInput(e.target.value)}
+                />
+              </div>
 
-            <Button 
-              onClick={generateDashboard} 
-              className="w-full"
-              disabled={loading}
-            >
-              {loading ? "Generating..." : "Generate Dashboard"}
-            </Button>
-          </CardContent>
-        </Card>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Instruction</label>
+                <Input
+                  placeholder="Describe how the dashboard should look..."
+                  value={userInstruction}
+                  onChange={(e) => setUserInstruction(e.target.value)}
+                />
+              </div>
 
-        {/* PREVIEW SECTION */}
-        <Card className="shadow-xl">
-          <CardHeader>
-            <CardTitle>Live Preview</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="bg-white rounded-lg border min-h-[500px] p-4 overflow-auto">
-              <div
-                dangerouslySetInnerHTML={{ __html: generatedHtml }}
-              />
-            </div>
-          </CardContent>
-        </Card>
+              <Button
+                onClick={generateDashboard}
+                className="w-full h-11 text-base"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  "Generate Dashboard"
+                )}
+              </Button>
+            </CardContent>
+          </Card>
 
+          {/* Preview section */}
+          <Card className="shadow-xl border-0">
+            <CardHeader>
+              <CardTitle>Live Preview</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-white rounded-lg border min-h-[600px] overflow-hidden">
+                <iframe
+                  title="preview"
+                  sandbox=""
+                  srcDoc={generatedHtml}
+                  className="w-full h-[600px]"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
