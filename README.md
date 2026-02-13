@@ -1,16 +1,63 @@
-# React + Vite
+# Instant Dashboard Generator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A web application that transforms structured JSON data into a clean, modern dashboard UI using an AI model.
 
-Currently, two official plugins are available:
+This project was built as part of the Onepane.ai technical assessment.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## 🚀 Overview
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+The application allows users to:
 
-## Expanding the ESLint configuration
+1. Paste structured JSON data
+2. Provide a natural language instruction
+3. Generate a responsive dashboard UI
+4. Preview the generated HTML/CSS instantly
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+The AI model converts the JSON data into a visually structured dashboard layout.
+
+---
+
+## 🏗 Architecture
+
+This project follows a production-ready architecture:
+
+### Frontend
+- React (Vite)
+- Tailwind CSS
+- shadcn/ui components
+
+### Backend
+- Vercel Serverless Function (`/api/generate`)
+
+The frontend sends user input to the serverless function.  
+The serverless function:
+
+- Injects a hidden **System Prompt**
+- Calls the AI API
+- Returns only raw HTML/CSS
+- Keeps API keys secure (never exposed to the client)
+
+This ensures proper separation between UI and AI logic.
+
+---
+
+## 🧠 AI API Used
+
+This project uses an **OpenAI-compatible API**.
+
+Currently configured to use:
+
+- **Groq API**
+- Model: `llama3-70b-8192`
+
+Groq provides an OpenAI-compatible interface, allowing usage via the official OpenAI SDK with a custom `baseURL`.
+
+Example configuration:
+
+```js
+const openai = new OpenAI({
+  apiKey: process.env.GROQ_API_KEY,
+  baseURL: "https://api.groq.com/openai/v1",
+});
