@@ -3,9 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import TextType from "@/components/ui/text/typing";
 
 export default function Generator() {
   const [jsonInput, setJsonInput] = useState("");
@@ -58,29 +58,44 @@ export default function Generator() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 p-8">
+    <div className="min-h-screen p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Heading section */}
 
         <div className="text-center space-y-2">
           <h1 className="text-4xl font-bold tracking-tight">Dashboard AI</h1>
-          <p className="text-muted-foreground">
-            Instant Insights from Your Data.
+          <p className="text-muted-foreground text-white/80">
+            
+            <TextType 
+  text={["Turn raw JSON into insights",
+  "Powered by intelligent prompts",
+  "Visualize anything. Instantly!"]}
+  typingSpeed={75}
+  pauseDuration={1500}
+  showCursor
+  cursorCharacter="_"
+  texts={["Instant Insights from Your Data.","Build some amazing experiences!"]}
+  deletingSpeed={50}
+  variableSpeedEnabled={false}
+  variableSpeedMin={60}
+  variableSpeedMax={120}
+  cursorBlinkDuration={0.5}
+/>
           </p>
         </div>
 
-        <Separator />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Input section */}
-          <Card className="shadow-xl border-0">
+          <Card className="shadow-xl border-0 bg-white/10 backdrop-blur-md">
             <CardHeader>
-              <CardTitle>Configuration</CardTitle>
+              <CardTitle className="text-white">Configuration</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
-                <label className="text-sm font-medium">JSON Data</label>
+                <label className="text-sm text-white font-medium">JSON Data</label>
                 <Textarea
+                  className="font-mono text-white"
                   rows={12}
                   placeholder="Paste structured JSON here..."
                   value={jsonInput}
@@ -89,8 +104,9 @@ export default function Generator() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Instruction</label>
+                <label className="text-sm text-white font-medium">Instruction</label>
                 <Input
+                  className="text-white"
                   placeholder="Describe how the dashboard should look..."
                   value={userInstruction}
                   onChange={(e) => setUserInstruction(e.target.value)}
@@ -115,12 +131,12 @@ export default function Generator() {
           </Card>
 
           {/* Preview section */}
-          <Card className="shadow-xl border-0">
+          <Card className="shadow-xl border-0 bg-white/10 backdrop-blur-md">
             <CardHeader>
-              <CardTitle>Live Preview</CardTitle>
+              <CardTitle className="text-white">Live Preview</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="bg-white rounded-lg border min-h-[600px] overflow-hidden">
+              <div className=" rounded-lg overflow-hidden">
                 <iframe
                   title="preview"
                   sandbox=""
