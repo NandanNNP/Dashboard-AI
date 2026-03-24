@@ -10,12 +10,36 @@ A web application that transforms structured JSON data into a clean, modern dash
 
 The application allows users to:
 
-1. Paste structured JSON data
-2. Provide a natural language instruction
-3. Generate a responsive dashboard UI
-4. Preview the generated HTML/CSS instantly
+1. **Paste structured JSON data** or use pre-built templates.
+2. **Provide a natural language instruction** for the initial design.
+3. **Iteratively Refine** the result with follow-up prompts (e.g., "make it blue", "add a sidebar").
+4. **Live Edit** the generated HTML/CSS with instant preview updates.
+5. **Manage a Library** of saved dashboards stored locally.
+6. **Responsive Testing** with Desktop, Tablet, and Mobile viewports.
+7. **Export** designs as standalone HTML files or copy the code.
 
 The AI model converts the JSON data into a visually structured dashboard layout.
+
+---
+
+## 📺 Preview
+
+![Dashboard AI Preview](https://github.com/user-attachments/assets/57f5c764-9f7a-4b9a-8a5e-9f3b8b1b2b3a)
+
+> *Note: Replace the placeholder above with your actual demo video/GIF.*
+
+---
+
+## ✨ Features
+
+- 🧠 **AI-Powered Generation**: Uses LLMs to transform data into professional UIs.
+- 🔄 **Iterative Refinement**: Refine and tweak your dashboard until it's perfect.
+- ⏪ **Undo Support**: Revert to previous versions if a refinement doesn't go as planned.
+- 📝 **Live Code Editor**: Direct access to HTML/CSS with immediate preview synchronization.
+- 📱 **Responsive Viewports**: Toggle between Mobile, Tablet, and Desktop views.
+- 💾 **Local Library**: Save your favorite designs to `localStorage` for later use.
+- 🎨 **Quick Templates**: Jumpstart your project with Sales or Analytics templates.
+- 🚀 **Export & Copy**: Ready-to-use code for your next project.
 
 ---
 
