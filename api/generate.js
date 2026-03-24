@@ -6,22 +6,24 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: "Method not allowed" });
     }
 
-    const { jsonInput, userInstruction } = req.body;
+    const { jsonInput, userInstruction, previousHtml } = req.body;
 
     if (!jsonInput || !userInstruction) {
       return res.status(400).json({ error: "Missing input data" });
     }
 
     const openai = new OpenAI({
-  apiKey: process.env.GROQ_API_KEY,
-  baseURL: "https://api.groq.com/openai/v1",
-});
+      apiKey: process.env.GROQ_API_KEY,
+      baseURL: "https://api.groq.com/openai/v1",
+    });
 
     const systemPrompt = `
 You are a senior frontend engineer and dashboard designer.
 
 Your task is to transform structured JSON data into a clean, modern,
 responsive dashboard UI using ONLY HTML and CSS.
+
+${previousHtml ? "The user wants to REFINE an existing dashboard. You will be provided with the current HTML/CSS and the user's requested changes." : "The user wants to CREATE a new dashboard based on JSON data and instructions."}
 
 Rules:
 - Output must be valid HTML.
@@ -37,7 +39,20 @@ Rules:
 Return ONLY HTML.
 `;
 
-    const userPrompt = `
+    const userPrompt = previousHtml
+      ? `
+CURRENT HTML:
+${previousHtml}
+
+JSON DATA:
+${jsonInput}
+
+REFINEMENT INSTRUCTION:
+${userInstruction}
+
+Please update the HTML to reflect these changes.
+`
+      : `
 JSON Data:
 ${jsonInput}
 
