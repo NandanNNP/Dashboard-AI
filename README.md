@@ -2,7 +2,9 @@
 
 A web application that transforms structured JSON data into a clean, modern dashboard UI using an AI model.
 
-
+<div align="center">
+  <video src="public/preview.webm" width="100%" controls autoplay loop muted></video>
+</div>
 
 ---
 
@@ -13,7 +15,9 @@ The application allows users to:
 1. Paste structured JSON data
 2. Provide a natural language instruction
 3. Generate a responsive dashboard UI
-4. Preview the generated HTML/CSS instantly
+4. Preview and **edit** the generated HTML/CSS instantly
+5. **Undo/Redo** changes during refinement
+6. Save dashboards to a **Library** for later use
 
 The AI model converts the JSON data into a visually structured dashboard layout.
 

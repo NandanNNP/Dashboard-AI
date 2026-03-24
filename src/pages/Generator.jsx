@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Loader2, Sparkles, Database, MessageSquare, Layout, MonitorPlay, Globe, Smartphone, Tablet, Monitor, Code, Download, Copy, Check, RotateCcw } from "lucide-react";
+import { Loader2, Sparkles, Database, MessageSquare, Layout, MonitorPlay, Globe, Smartphone, Tablet, Monitor, Code, Download, Copy, Check, RotateCcw, Undo2, Redo2, Bookmark, BookmarkPlus, Trash2, History } from "lucide-react";
 import TextType from "@/components/ui/text/typing";
 
 export default function Generator() {
@@ -16,6 +16,98 @@ export default function Generator() {
   const [activeTab, setActiveTab] = useState("preview");
   const [refineInstruction, setRefineInstruction] = useState("");
   const [copied, setCopied] = useState(false);
+  const [history, setHistory] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(-1);
+  const [library, setLibrary] = useState([]);
+  const [isManualEdit, setIsManualEdit] = useState(false);
+
+  useEffect(() => {
+    if (isManualEdit) {
+      const timeoutId = setTimeout(() => {
+        addToHistory(generatedHtml);
+        setIsManualEdit(false);
+      }, 1000);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [generatedHtml, isManualEdit, addToHistory]);
+
+  useEffect(() => {
+    const savedLibrary = localStorage.getItem("dashboard-library");
+    if (savedLibrary) {
+      try {
+        setLibrary(JSON.parse(savedLibrary));
+      } catch (e) {
+        console.error("Failed to load library", e);
+      }
+    }
+  }, []);
+
+  const saveToLibrary = () => {
+    if (!generatedHtml) return;
+
+    const name = prompt("Enter a name for this dashboard:", `Dashboard ${new Date().toLocaleString()}`);
+    if (!name) return;
+
+    const newItem = {
+      id: Date.now(),
+      name,
+      html: generatedHtml,
+      json: jsonInput,
+      instruction: userInstruction,
+      timestamp: new Date().toISOString()
+    };
+
+    const newLibrary = [newItem, ...library];
+    setLibrary(newLibrary);
+    localStorage.setItem("dashboard-library", JSON.stringify(newLibrary));
+    toast.success("Dashboard saved to library!");
+  };
+
+  const loadFromLibrary = (item) => {
+    setGeneratedHtml(item.html);
+    setJsonInput(item.json);
+    setUserInstruction(item.instruction);
+    addToHistory(item.html);
+    toast.success(`Loaded "${item.name}" from library`);
+  };
+
+  const deleteFromLibrary = (id, e) => {
+    e.stopPropagation();
+    const newLibrary = library.filter(item => item.id !== id);
+    setLibrary(newLibrary);
+    localStorage.setItem("dashboard-library", JSON.stringify(newLibrary));
+    toast.error("Dashboard removed from library");
+  };
+
+  const addToHistory = useCallback((html) => {
+    setHistory(prev => {
+      const newHistory = prev.slice(0, currentIndex + 1);
+      newHistory.push(html);
+      if (newHistory.length > 20) {
+        newHistory.shift();
+      }
+      return newHistory;
+    });
+    setCurrentIndex(prev => (prev < 19 ? prev + 1 : 19));
+  }, [currentIndex]);
+
+  const undo = () => {
+    if (currentIndex > 0) {
+      const prevIndex = currentIndex - 1;
+      setCurrentIndex(prevIndex);
+      setGeneratedHtml(history[prevIndex]);
+      toast.info("Undo successful");
+    }
+  };
+
+  const redo = () => {
+    if (currentIndex < history.length - 1) {
+      const nextIndex = currentIndex + 1;
+      setCurrentIndex(nextIndex);
+      setGeneratedHtml(history[nextIndex]);
+      toast.info("Redo successful");
+    }
+  };
 
   const validateJSON = (input) => {
     try {
@@ -58,6 +150,7 @@ export default function Generator() {
 
       const data = await response.json();
       setGeneratedHtml(data.html);
+      addToHistory(data.html);
       if (isRefinement) setRefineInstruction("");
 
       toast.success(isRefinement ? "Dashboard refined successfully." : "Dashboard generated successfully.");
@@ -167,6 +260,41 @@ export default function Generator() {
 
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pb-12">
+          {/* Library Section */}
+          {library.length > 0 && (
+            <div className="lg:col-span-12 space-y-4">
+              <div className="flex items-center gap-2 text-white/80">
+                <History className="h-5 w-5 text-indigo-400" />
+                <h2 className="text-lg font-bold tracking-tight">Saved Dashboards</h2>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {library.map((item) => (
+                  <Card
+                    key={item.id}
+                    className="bg-white/5 border-white/10 hover:border-indigo-500/50 cursor-pointer transition-all group"
+                    onClick={() => loadFromLibrary(item)}
+                  >
+                    <CardContent className="p-4 flex flex-col gap-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Bookmark className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
+                          <span className="text-sm font-medium text-white/90 truncate">{item.name}</span>
+                        </div>
+                        <button
+                          onClick={(e) => deleteFromLibrary(item.id, e)}
+                          className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-red-500/20 text-white/40 hover:text-red-400 transition-all"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                      <span className="text-[10px] text-white/40">{new Date(item.timestamp).toLocaleDateString()}</span>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Input section */}
           <Card className="lg:col-span-5 shadow-2xl border border-white/10 bg-white/5 backdrop-blur-xl transition-all duration-300 hover:border-white/20">
             <CardHeader className="border-b border-white/10">
@@ -286,6 +414,24 @@ export default function Generator() {
                 <div className="flex items-center gap-3">
                    {generatedHtml && (
                     <div className="flex items-center gap-2 mr-4 pr-4 border-r border-white/10">
+                      <div className="flex items-center gap-1 mr-2 pr-2 border-r border-white/5">
+                        <button
+                          onClick={undo}
+                          disabled={currentIndex <= 0}
+                          className="p-1.5 rounded-md hover:bg-white/5 text-white/60 hover:text-white transition-all disabled:opacity-30 disabled:hover:bg-transparent"
+                          title="Undo"
+                        >
+                          <Undo2 className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={redo}
+                          disabled={currentIndex >= history.length - 1}
+                          className="p-1.5 rounded-md hover:bg-white/5 text-white/60 hover:text-white transition-all disabled:opacity-30 disabled:hover:bg-transparent"
+                          title="Redo"
+                        >
+                          <Redo2 className="h-4 w-4" />
+                        </button>
+                      </div>
                       <button
                         onClick={copyToClipboard}
                         className="p-1.5 rounded-md hover:bg-white/5 text-white/60 hover:text-white transition-all"
@@ -299,6 +445,13 @@ export default function Generator() {
                         title="Download HTML"
                       >
                         <Download className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={saveToLibrary}
+                        className="p-1.5 rounded-md hover:bg-white/5 text-white/60 hover:text-white transition-all"
+                        title="Save to Library"
+                      >
+                        <BookmarkPlus className="h-4 w-4" />
                       </button>
                     </div>
                    )}
@@ -360,8 +513,16 @@ export default function Generator() {
                     />
                   </div>
                 ) : (
-                  <div className="w-full h-full p-6 font-mono text-sm text-white/80 overflow-auto">
-                    <pre className="whitespace-pre-wrap">{generatedHtml}</pre>
+                  <div className="w-full h-full p-0 font-mono text-sm text-white/80 overflow-hidden">
+                    <textarea
+                      value={generatedHtml}
+                      onChange={(e) => {
+                        setGeneratedHtml(e.target.value);
+                        setIsManualEdit(true);
+                      }}
+                      className="w-full h-full p-6 bg-transparent border-0 focus:ring-0 focus:outline-none resize-none scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent"
+                      spellCheck="false"
+                    />
                   </div>
                 )
               ) : (
