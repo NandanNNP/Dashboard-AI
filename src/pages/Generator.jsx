@@ -21,6 +21,18 @@ export default function Generator() {
   const [library, setLibrary] = useState([]);
   const [isManualEdit, setIsManualEdit] = useState(false);
 
+  const addToHistory = useCallback((html) => {
+    setHistory(prev => {
+      const newHistory = prev.slice(0, currentIndex + 1);
+      newHistory.push(html);
+      if (newHistory.length > 20) {
+        newHistory.shift();
+      }
+      return newHistory;
+    });
+    setCurrentIndex(prev => (prev < 19 ? prev + 1 : 19));
+  }, [currentIndex]);
+
   useEffect(() => {
     if (isManualEdit) {
       const timeoutId = setTimeout(() => {
@@ -78,18 +90,6 @@ export default function Generator() {
     localStorage.setItem("dashboard-library", JSON.stringify(newLibrary));
     toast.error("Dashboard removed from library");
   };
-
-  const addToHistory = useCallback((html) => {
-    setHistory(prev => {
-      const newHistory = prev.slice(0, currentIndex + 1);
-      newHistory.push(html);
-      if (newHistory.length > 20) {
-        newHistory.shift();
-      }
-      return newHistory;
-    });
-    setCurrentIndex(prev => (prev < 19 ? prev + 1 : 19));
-  }, [currentIndex]);
 
   const undo = () => {
     if (currentIndex > 0) {
