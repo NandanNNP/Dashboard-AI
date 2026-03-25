@@ -1,11 +1,82 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useReducer } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Loader2, Sparkles, Database, MessageSquare, Layout, MonitorPlay, Globe, Smartphone, Tablet, Monitor, Code, Download, Copy, Check, RotateCcw, Undo2, Redo2, Bookmark, BookmarkPlus, Trash2, History } from "lucide-react";
+import { Loader2, Sparkles, Database, MessageSquare, Layout, MonitorPlay, Globe, Smartphone, Tablet, Monitor, Code, Download, Copy, Check, RotateCcw, Undo2, Redo2, Bookmark, BookmarkPlus, Trash2, History as HistoryIcon } from "lucide-react";
 import TextType from "@/components/ui/text/typing";
+
+const templates = [
+  {
+    name: "Sales Overview",
+    instruction: "Create a modern sales dashboard with a hero metric, a bar chart for monthly sales, and a table of top products.",
+    json: {
+      total_revenue: "$124,500",
+      growth: "+12.5%",
+      monthly_sales: [
+        { month: "Jan", sales: 12000 },
+        { month: "Feb", sales: 15000 },
+        { month: "Mar", sales: 18000 }
+      ],
+      top_products: [
+        { name: "Product A", revenue: "$45,000" },
+        { name: "Product B", revenue: "$32,000" }
+      ]
+    }
+  },
+  {
+    name: "User Analytics",
+    instruction: "Design a user analytics dashboard showing active users, retention rate, and a breakdown of user demographics.",
+    json: {
+      active_users: "12,450",
+      retention_rate: "85%",
+      demographics: {
+        "18-24": "25%",
+        "25-34": "45%",
+        "35-44": "20%",
+        "45+": "10%"
+      },
+      device_usage: {
+        mobile: "65%",
+        desktop: "30%",
+        tablet: "5%"
+      }
+    }
+  }
+];
+
+const historyReducer = (state, action) => {
+  switch (action.type) {
+    case 'ADD': {
+      const newHistory = state.items.slice(0, state.currentIndex + 1);
+      newHistory.push(action.payload);
+      if (newHistory.length > 20) {
+        newHistory.shift();
+        return {
+          items: newHistory,
+          currentIndex: newHistory.length - 1
+        };
+      }
+      return {
+        items: newHistory,
+        currentIndex: newHistory.length - 1
+      };
+    }
+    case 'UNDO':
+      return {
+        ...state,
+        currentIndex: Math.max(0, state.currentIndex - 1)
+      };
+    case 'REDO':
+      return {
+        ...state,
+        currentIndex: Math.min(state.items.length - 1, state.currentIndex + 1)
+      };
+    default:
+      return state;
+  }
+};
 
 export default function Generator() {
   const [jsonInput, setJsonInput] = useState("");
@@ -16,22 +87,13 @@ export default function Generator() {
   const [activeTab, setActiveTab] = useState("preview");
   const [refineInstruction, setRefineInstruction] = useState("");
   const [copied, setCopied] = useState(false);
-  const [history, setHistory] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(-1);
+  const [historyState, dispatchHistory] = useReducer(historyReducer, { items: [], currentIndex: -1 });
   const [library, setLibrary] = useState([]);
   const [isManualEdit, setIsManualEdit] = useState(false);
 
   const addToHistory = useCallback((html) => {
-    setHistory(prev => {
-      const newHistory = prev.slice(0, currentIndex + 1);
-      newHistory.push(html);
-      if (newHistory.length > 20) {
-        newHistory.shift();
-      }
-      return newHistory;
-    });
-    setCurrentIndex(prev => (prev < 19 ? prev + 1 : 19));
-  }, [currentIndex]);
+    dispatchHistory({ type: 'ADD', payload: html });
+  }, []);
 
   useEffect(() => {
     if (isManualEdit) {
@@ -92,19 +154,19 @@ export default function Generator() {
   };
 
   const undo = () => {
-    if (currentIndex > 0) {
-      const prevIndex = currentIndex - 1;
-      setCurrentIndex(prevIndex);
-      setGeneratedHtml(history[prevIndex]);
+    if (historyState.currentIndex > 0) {
+      const prevIndex = historyState.currentIndex - 1;
+      dispatchHistory({ type: 'UNDO' });
+      setGeneratedHtml(historyState.items[prevIndex]);
       toast.info("Undo successful");
     }
   };
 
   const redo = () => {
-    if (currentIndex < history.length - 1) {
-      const nextIndex = currentIndex + 1;
-      setCurrentIndex(nextIndex);
-      setGeneratedHtml(history[nextIndex]);
+    if (historyState.currentIndex < historyState.items.length - 1) {
+      const nextIndex = historyState.currentIndex + 1;
+      dispatchHistory({ type: 'REDO' });
+      setGeneratedHtml(historyState.items[nextIndex]);
       toast.info("Redo successful");
     }
   };
@@ -187,45 +249,6 @@ export default function Generator() {
     toast.info(`Loaded ${template.name} template`);
   };
 
-  const templates = [
-    {
-      name: "Sales Overview",
-      instruction: "Create a modern sales dashboard with a hero metric, a bar chart for monthly sales, and a table of top products.",
-      json: {
-        total_revenue: "$124,500",
-        growth: "+12.5%",
-        monthly_sales: [
-          { month: "Jan", sales: 12000 },
-          { month: "Feb", sales: 15000 },
-          { month: "Mar", sales: 18000 }
-        ],
-        top_products: [
-          { name: "Product A", revenue: "$45,000" },
-          { name: "Product B", revenue: "$32,000" }
-        ]
-      }
-    },
-    {
-      name: "User Analytics",
-      instruction: "Design a user analytics dashboard showing active users, retention rate, and a breakdown of user demographics.",
-      json: {
-        active_users: "12,450",
-        retention_rate: "85%",
-        demographics: {
-          "18-24": "25%",
-          "25-34": "45%",
-          "35-44": "20%",
-          "45+": "10%"
-        },
-        device_usage: {
-          mobile: "65%",
-          desktop: "30%",
-          tablet: "5%"
-        }
-      }
-    }
-  ];
-
   return (
     <div className="min-h-screen p-8">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -241,7 +264,7 @@ export default function Generator() {
               Dashboard AI
             </span>
           </h1>
-          <p className="text-xl text-white/60 max-w-2xl mx-auto min-h-[1.5em]">
+          <div className="text-xl text-white/60 max-w-2xl mx-auto min-h-[1.5em]">
             <TextType 
               text={[
                 "Turn raw JSON into insights",
@@ -255,7 +278,7 @@ export default function Generator() {
               deletingSpeed={50}
               cursorBlinkDuration={0.5}
             />
-          </p>
+          </div>
         </div>
 
 
@@ -264,7 +287,7 @@ export default function Generator() {
           {library.length > 0 && (
             <div className="lg:col-span-12 space-y-4">
               <div className="flex items-center gap-2 text-white/80">
-                <History className="h-5 w-5 text-indigo-400" />
+                <HistoryIcon className="h-5 w-5 text-indigo-400" />
                 <h2 className="text-lg font-bold tracking-tight">Saved Dashboards</h2>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -417,7 +440,7 @@ export default function Generator() {
                       <div className="flex items-center gap-1 mr-2 pr-2 border-r border-white/5">
                         <button
                           onClick={undo}
-                          disabled={currentIndex <= 0}
+                          disabled={historyState.currentIndex <= 0}
                           className="p-1.5 rounded-md hover:bg-white/5 text-white/60 hover:text-white transition-all disabled:opacity-30 disabled:hover:bg-transparent"
                           title="Undo"
                         >
@@ -425,7 +448,7 @@ export default function Generator() {
                         </button>
                         <button
                           onClick={redo}
-                          disabled={currentIndex >= history.length - 1}
+                          disabled={historyState.currentIndex >= historyState.items.length - 1}
                           className="p-1.5 rounded-md hover:bg-white/5 text-white/60 hover:text-white transition-all disabled:opacity-30 disabled:hover:bg-transparent"
                           title="Redo"
                         >
